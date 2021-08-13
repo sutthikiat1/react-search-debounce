@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, ChangeEvent } from "react";
+import { fetchSearchResults } from "./utils";
+import ListItem from "./components/ListItem";
+import SearchInput from "./components/SearchInput";
+import { debounce } from "lodash";
 
-function App() {
+const fetchData = async (query, cb) => {
+  const res = await fetchSearchResults(query);
+  cb(res);
+};
+
+const debouncedFetchData = debounce((query, cb) => {
+  fetchData(query, cb);
+}, 500);
+
+export default function App() {
+  const [query, setQuery] = React.useState("");
+  const [results, setResults] = React.useState([]);
+
+  useEffect(() => {
+    debouncedFetchData(query, (res) => {
+      setResults(res);
+    });
+  }, [query]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <SearchInput
+        value={query}
+        onChangeText={(e: ChangeEvent<HTMLInputElement>) => {
+          setQuery(e.target.value);
+        }}
+      />
+      {results.map((result: any, index: any) => (
+        <div key={index}>
+          <ListItem
+            title={result.name}
+            imageUrl={result.image_url}
+            caption={result.tagline}
+          />
+        </div>
+      ))}
     </div>
   );
 }
-
-export default App;
